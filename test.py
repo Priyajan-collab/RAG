@@ -7,11 +7,25 @@ from langchain_community.document_loaders import PyPDFLoader
 import os
 from qdrant_client import QdrantClient;
 from qdrant_client.http.models import VectorParams, PointStruct
+from openai import OpenAI
+
+key="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"
+# define model
+ # ollama pull phi3:3.8b-instruct
+# SYSTEM_MESSAGE = {"role": "system", "content": "You are a helpful assistant."}
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1/",  # ollama endpoint
+    api_key=key,
+)
+
+
 
 # init client
+
 qClient=QdrantClient(":memory:");
-# review this code below
+# collection_name
 collection_name = "Operator_Overloading"
+# review this code below
 qClient.recreate_collection(
     collection_name=collection_name,
     vectors_config=VectorParams(size=384, distance="Cosine")
@@ -46,7 +60,8 @@ if uploadFile:
             vector_data = list(embedding)
             # review this code below
             # Create a point structure with the document and metadata
-            point = PointStruct(id=i, vector=vector_data, payload={"content": page.page_content, "metadata": page.metadata})
+            
+            point = PointStruct(id=i, vector=vector_data[0], payload={"content": page.page_content, "metadata": page.metadata})
             
             # Add point to the collection
             qClient.upsert(collection_name=collection_name, points=[point])
@@ -61,6 +76,7 @@ chat=st.chat_input("what's on your mind");
 if chat:
     embedding_generator=embedding_model.embed(chat);
     vectorData=list(embedding_generator);
+    # print(vectorData[0])
 
     # embedding_generator2=embedding_model.embed(testWord);
     # testVectorData=list(embedding_generator2)
@@ -68,10 +84,15 @@ if chat:
     search_result=qClient.search(
          collection_name="Operator_Overloading",
         #  query_text=chat,
-         query_vector=vectorData,
+         query_vector=vectorData[0],
          limit=5
     )
-    print(search_result)
+    
+    output=[result.payload['content'] for result in search_result]
+    st.write(output)
+    
+    
+    # print(test[0])
     # checking the logic to match two words
     # result=np.dot(vectorData[0],testVectorData[0]);
     # print(result)
