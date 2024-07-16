@@ -3,3 +3,4 @@ db/
 /db1
 /path
 *.pdf
+*.env
