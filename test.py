@@ -88,24 +88,23 @@ if chat:
     )
     output=[result.payload["content"] for result in search_results ]
     # st.write(output)
-    # apparently every single content needs a role
-    prompt = [
-            {
-                "role": "system",
-                "content": chat +" and also answer the following question using the context below"
-            },
-            
-        ]
-    for message in output:
-        prompt.append({
-            "role":"user",
-            "content":message
-        })
-    print(prompt)
+    context="".join(output)
+   
+    # print(context)
+    system_prompt = {
+                    "role": "system",
+                    "content": " If you don't know the answer just say so ,  please answer using the context given :" + format(context),
+                }
+
+    
+    prompt={
+            "role": "user",
+            "content": chat}
+    total_prompt=[system_prompt,prompt]
     reply_stream=client.chat.completions.create(
         model=MODEL,
         # this message does not take dict but list of dictionary 
-        messages= prompt,
+        messages= total_prompt,
         stream=True
     )
     st.write(reply_stream)
